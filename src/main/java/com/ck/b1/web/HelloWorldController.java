@@ -23,6 +23,8 @@ import com.ck.b1.model.Customer;
 import com.ck.b1.model.CustomerRepository;
 import com.ck.b1.model.service.UserService;
 
+import jakarta.servlet.http.HttpSession;
+
 @Controller
 public class HelloWorldController {
 
@@ -33,6 +35,9 @@ public class HelloWorldController {
 
 	@Autowired
 	UserService userService;
+
+	@Autowired
+	HttpSession httpSession;
 
 	@GetMapping("/hello-world")
 	@ResponseBody
@@ -45,7 +50,18 @@ public class HelloWorldController {
 		log.info("hello-world auth: authentication.isAuthenticated() = " + authentication.isAuthenticated());
 		log.info("hello-world auth: authentication.getPrincipal() = " + authentication.getPrincipal());
 
+		pushToHistory("hello");
 		return customers;
+	}
+
+	private void pushToHistory(String item) {
+		Object o = httpSession.getAttribute("history");
+		if (o == null) {
+			o = item;
+		} else {
+			o = o.toString() + "|" + item;
+		}
+		httpSession.setAttribute("history", o);
 	}
 
 	@PostMapping("/create-user")
@@ -67,7 +83,10 @@ public class HelloWorldController {
 			log.info("\tauthority: " + g.getAuthority());
 		}
 
+		pushToHistory("greet");
 		model.addAttribute("name", "Csaba");
+		model.addAttribute("history", httpSession.getAttribute("history"));
+
 		return "greeting";
 	}
 }

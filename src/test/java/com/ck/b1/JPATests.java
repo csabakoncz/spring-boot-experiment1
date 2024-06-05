@@ -15,12 +15,14 @@ public class JPATests {
 
 	@Autowired
 	CustomerRepository repository;
-	
+
 	@Test
 	void jpaWorks() {
+		var count1 = repository.count();
+
 		var customer = new Customer("Elek", "Rongy");
 		repository.save(customer);
-	
-		Assertions.assertEquals(1,repository.count());
+
+		Assertions.assertEquals(count1+1,repository.count());
 	}
 }

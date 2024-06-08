@@ -17,32 +17,32 @@ import com.ck.b1.model.service.UserService;
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 public class HelloWorldControllerTest {
 
-	@LocalServerPort
-	private int port;
+    @LocalServerPort
+    private int port;
 
-	@Autowired
-	private TestRestTemplate restTemplate;
+    @Autowired
+    private TestRestTemplate restTemplate;
 
-	@Autowired
-	UserService userService;
+    @Autowired
+    UserService userService;
 
-	@Test
-	void testAuth() throws Exception {
+    @Test
+    void testAuth() throws Exception {
 
-		var url = "http://localhost:" + port + "/hello-world";
+        var url = "http://localhost:" + port + "/hello-world";
 
-		var responseEntity = restTemplate.getForEntity(url, String.class);
+        var responseEntity = restTemplate.getForEntity(url, String.class);
 
-		// unauthenticated get, we will be redirected:
-		assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.FOUND);
+        // unauthenticated get, we will be redirected:
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.FOUND);
 
-		var username = "user2";
-		var password = "password2";
-		userService.createUser(username, password);
+        var username = "user2";
+        var password = "password2";
+        userService.createUser(username, password);
 
-		responseEntity = restTemplate.withBasicAuth(username, password).getForEntity(url, String.class);
+        responseEntity = restTemplate.withBasicAuth(username, password).getForEntity(url, String.class);
 
-		// we get a valid response
-		assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
-	}
+        // we get a valid response
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
 }

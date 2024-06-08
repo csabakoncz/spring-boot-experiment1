@@ -13,12 +13,12 @@ import com.ck.b1.model.service.UserService;
 @SpringBootTest()
 public class UserServiceTest {
 
-	@Autowired
-	UserService userService;
+    @Autowired
+    UserService userService;
 
-	@Test
-	void canCreateUsers() {
-		UserDetails user = userService.createUser("user1", "password1");
-		Assertions.assertNotNull(user);
-	}
+    @Test
+    void canCreateUsers() {
+        UserDetails user = userService.createUser("user1", "password1");
+        Assertions.assertNotNull(user);
+    }
 }

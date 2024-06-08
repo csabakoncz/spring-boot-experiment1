@@ -13,16 +13,16 @@ import com.ck.b1.model.CustomerRepository;
 @SpringBootTest()
 public class JPATests {
 
-	@Autowired
-	CustomerRepository repository;
+    @Autowired
+    CustomerRepository repository;
 
-	@Test
-	void jpaWorks() {
-		var count1 = repository.count();
+    @Test
+    void jpaWorks() {
+        var count1 = repository.count();
 
-		var customer = new Customer("Elek", "Rongy");
-		repository.save(customer);
+        var customer = new Customer("Elek", "Rongy");
+        repository.save(customer);
 
-		Assertions.assertEquals(count1+1,repository.count());
-	}
+        Assertions.assertEquals(count1 + 1, repository.count());
+    }
 }

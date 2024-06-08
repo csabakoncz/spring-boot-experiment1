@@ -11,20 +11,20 @@ import org.springframework.stereotype.Component;
 @Component
 public class UserService {
 
-	@Autowired
-	UserDetailsService userDetailsService;
+    @Autowired
+    UserDetailsService userDetailsService;
 
-	@Autowired
-	PasswordEncoder passwordEncoder;
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
-	public UserDetails createUser(String name, String password) {
-		// TODO ROLE is needed!
-		UserDetails user = User.withUsername(name).password(passwordEncoder.encode(password)).roles("USER").build();
-		if (userDetailsService instanceof UserDetailsManager) {
-			UserDetailsManager userDetailsManager = (UserDetailsManager) userDetailsService;
-			userDetailsManager.createUser(user);
-			return userDetailsManager.loadUserByUsername(name);
-		}
-		return null;
-	}
+    public UserDetails createUser(String name, String password) {
+        // TODO ROLE is needed!
+        UserDetails user = User.withUsername(name).password(passwordEncoder.encode(password)).roles("USER").build();
+        if (userDetailsService instanceof UserDetailsManager) {
+            UserDetailsManager userDetailsManager = (UserDetailsManager) userDetailsService;
+            userDetailsManager.createUser(user);
+            return userDetailsManager.loadUserByUsername(name);
+        }
+        return null;
+    }
 }

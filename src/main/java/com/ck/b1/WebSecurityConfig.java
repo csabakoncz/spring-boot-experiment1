@@ -51,6 +51,7 @@ public class WebSecurityConfig {
                 .csrf(csrf -> csrf.ignoringRequestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**")));
 
         http.csrf(csrf -> csrf.ignoringRequestMatchers("/create-user"));
+        http.csrf(csrf -> csrf.ignoringRequestMatchers("/login"));
 
         http.authorizeHttpRequests(requests -> requests.anyRequest().authenticated());
 

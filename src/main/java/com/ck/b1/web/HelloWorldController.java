@@ -1,5 +1,6 @@
 package com.ck.b1.web;
 
+import java.security.Principal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -88,5 +89,11 @@ public class HelloWorldController {
         model.addAttribute("history", httpSession.getAttribute("history"));
 
         return "greeting";
+    }
+
+    @GetMapping("/user")
+    @ResponseBody
+    public Principal user(Principal user) {
+        return user;
     }
 }

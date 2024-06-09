@@ -9,11 +9,13 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.client.TestRestTemplate.HttpClientOption;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.util.LinkedMultiValueMap;
 
@@ -33,7 +35,7 @@ public class HelloWorldControllerTest {
     UserService userService;
 
     @Test
-    void testAuth() throws Exception {
+    void testBasicAuth() throws Exception {
 
         var url = "/hello-world";
 
@@ -74,7 +76,7 @@ public class HelloWorldControllerTest {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        var map= new LinkedMultiValueMap<String, String>();
+        var map = new LinkedMultiValueMap<String, String>();
         map.add("username", username);
         map.add("password", password);
 
@@ -85,6 +87,53 @@ public class HelloWorldControllerTest {
         // we also get a redirect, but this time to the root
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         assertThat(responseEntity.getHeaders().getLocation().toString()).doesNotContain("/login");
+
+        // retrieve the user information again:
+        responseEntity = client.getForEntity(userUrl, String.class);
+        // Now it succeeds
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    void testRememberMeLoginWithoutRedirects() throws Exception {
+
+        var userUrl = "http://localhost:" + port + "/user";
+        var loginUrl = "http://localhost:" + port + "/login";
+
+        // for "remember me" we need cookies:
+        var rtb = new RestTemplateBuilder().additionalInterceptors(new ClientHttpRequestInterceptor() {
+            @Override
+            public org.springframework.http.client.ClientHttpResponse intercept(
+                    org.springframework.http.HttpRequest request, byte[] body,
+                    org.springframework.http.client.ClientHttpRequestExecution execution) throws java.io.IOException {
+                request.getHeaders().add("X-Requested-With", "XMLHttpRequest");
+                return execution.execute(request, body);
+            };
+        });
+
+        var client = new TestRestTemplate(rtb, null, null, HttpClientOption.ENABLE_COOKIES);
+
+        var responseEntity = client.getForEntity(userUrl, String.class);
+
+        // unauthenticated get, we will be redirected:
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+
+        var username = "user4";
+        var password = "password4";
+        userService.createUser(username, password);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        var map = new LinkedMultiValueMap<String, String>();
+        map.add("username", username);
+        map.add("password", password);
+
+        // we log in
+        var entity = new HttpEntity(map, headers);
+        responseEntity = client.exchange(loginUrl, HttpMethod.POST, entity, String.class);
+
+        // we also get a redirect, but this time to the root
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         // retrieve the user information again:
         responseEntity = client.getForEntity(userUrl, String.class);

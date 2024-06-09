@@ -1,32 +1,43 @@
 package com.ck.b1;
 
+import java.io.IOException;
+
 import javax.sql.DataSource;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
+import org.springframework.security.web.savedrequest.RequestCache;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig {
 
-//	@Autowired
-    public void configureGlobal(DataSource dataSource, PasswordEncoder passwordEncoder,
-            AuthenticationManagerBuilder auth) throws Exception {
-        auth.jdbcAuthentication().dataSource(dataSource)
-        // the lines below generated the USERS and AUTHORITIES tables
-//		.withDefaultSchema()
-//		.withUser(User.withUsername("user").password(passwordEncoder.encode("password"))
-//		.roles("USER"))
-        ;
+    static class AuthenticationSuccessHandler200 extends SavedRequestAwareAuthenticationSuccessHandler {
+        @Override
+        protected void handle(HttpServletRequest request, HttpServletResponse response, Authentication authentication)
+                throws IOException, ServletException {
+            if ("XMLHttpRequest".equals(request.getHeader("X-Requested-With"))) {
+                response.setStatus(200);
+                response.flushBuffer();
+            } else {
+                super.handle(request, response, authentication);
+            }
+        }
     }
 
     @Bean
@@ -55,6 +66,8 @@ public class WebSecurityConfig {
 
         http.authorizeHttpRequests(requests -> requests.anyRequest().authenticated());
 
+        var authSuccessHandler = new AuthenticationSuccessHandler200();
+
         /**
          * Spring Security configures the use of basic auth by default. POST requests to
          * login and logout are handled by the security filter (there are no endpoints)
@@ -65,21 +78,38 @@ public class WebSecurityConfig {
             http.formLogin((form) -> form.loginPage("/login").permitAll());
         } else {
             // A Bootstrap 4 based login page. Nice!
-            http.formLogin((form) -> form.permitAll());
+            http.formLogin((form) -> {
+                form.permitAll();
+                form.successHandler(authSuccessHandler);
+            });
         }
 
         http.logout((logout) -> logout.permitAll());
 
         http.httpBasic(Customizer.withDefaults());
 
+        http.apply(MyCustomDsl.customDsl(authSuccessHandler));
         return http.build();
     }
 
-//	@Bean
-//	public UserDetailsService userDetailsService() {
-//		UserDetails user = User.withDefaultPasswordEncoder().username("user").password("password").roles("USER")
-//				.build();
-//
-//		return new InMemoryUserDetailsManager(user);
-//	}
+    private static class MyCustomDsl extends AbstractHttpConfigurer<MyCustomDsl, HttpSecurity> {
+        private AuthenticationSuccessHandler200 authenticationSuccessHandler;
+
+        public MyCustomDsl(AuthenticationSuccessHandler200 authenticationSuccessHandler) {
+            this.authenticationSuccessHandler = authenticationSuccessHandler;
+        }
+
+        @Override
+        public void configure(HttpSecurity http) throws Exception {
+            AuthenticationManager authenticationManager = http.getSharedObject(AuthenticationManager.class);
+            var requestCache = http.getSharedObject(RequestCache.class);
+            authenticationSuccessHandler.setRequestCache(requestCache);
+//            http.addFilter(new CustomFilter(authenticationManager));
+
+        }
+
+        public static MyCustomDsl customDsl(AuthenticationSuccessHandler200 authenticationSuccessHandler) {
+            return new MyCustomDsl(authenticationSuccessHandler);
+        }
+    }
 }

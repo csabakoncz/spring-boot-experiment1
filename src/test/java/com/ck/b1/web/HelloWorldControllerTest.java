@@ -2,6 +2,8 @@ package com.ck.b1.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.HashMap;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,6 +22,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.util.LinkedMultiValueMap;
 
 import com.ck.b1.model.service.UserService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -59,7 +63,7 @@ public class HelloWorldControllerTest {
     void testRememberMeLogin() throws Exception {
 
         var userUrl = "http://localhost:" + port + "/user";
-        var loginUrl = "http://localhost:" + port + "/login";
+        var loginUrl = loginUrl();
 
         // for "remember me" we need cookies:
         var client = new TestRestTemplate(HttpClientOption.ENABLE_COOKIES);
@@ -94,12 +98,7 @@ public class HelloWorldControllerTest {
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
-    @Test
-    void testRememberMeLoginWithoutRedirects() throws Exception {
-
-        var userUrl = "http://localhost:" + port + "/user";
-        var loginUrl = "http://localhost:" + port + "/login";
-
+    private TestRestTemplate createClient() {
         // for "remember me" we need cookies:
         var rtb = new RestTemplateBuilder().additionalInterceptors(new ClientHttpRequestInterceptor() {
             @Override
@@ -112,6 +111,16 @@ public class HelloWorldControllerTest {
         });
 
         var client = new TestRestTemplate(rtb, null, null, HttpClientOption.ENABLE_COOKIES);
+        return client;
+    }
+
+    @Test
+    void testRememberMeLoginWithoutRedirects() throws Exception {
+
+        var userUrl = "http://localhost:" + port + "/user";
+        var loginUrl = loginUrl();
+
+        var client = createClient();
 
         var responseEntity = client.getForEntity(userUrl, String.class);
 
@@ -139,5 +148,45 @@ public class HelloWorldControllerTest {
         responseEntity = client.getForEntity(userUrl, String.class);
         // Now it succeeds
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    private String loginUrl() {
+        return "http://localhost:" + port + "/login";
+    }
+
+    @Test
+    public void testLoginWithJsonBody() throws JsonProcessingException {
+        var username = "user5";
+        var password = "password5";
+        userService.createUser(username, password);
+
+        var data = new HashMap<String,String>();
+        data.put("username", username);
+        data.put("password", password);
+
+        var entity = jsonEntity(data);
+
+        // we log in
+        var client = createClient();
+        var responseEntity = client.exchange(loginUrl(), HttpMethod.POST, entity, String.class);
+
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        // check wrong password:
+        data.put("password", "BAD");
+        entity = jsonEntity(data);
+        responseEntity = client.exchange(loginUrl(), HttpMethod.POST, entity, String.class);
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    private HttpEntity jsonEntity(HashMap<String, String> data) throws JsonProcessingException {
+        var om = new ObjectMapper();
+        var jsonString = om.writeValueAsString(data);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        var entity = new HttpEntity(jsonString, headers);
+        return entity;
     }
 }

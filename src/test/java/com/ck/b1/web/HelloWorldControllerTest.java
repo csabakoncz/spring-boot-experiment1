@@ -49,6 +49,9 @@ public class HelloWorldControllerTest {
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         assertThat(responseEntity.getHeaders().getLocation().toString()).contains("/login");
 
+
+        // TODO use @DirtiesContext instead of creating new users all the time to avoid collision
+        // with users created by other tests.
         var username = "user2";
         var password = "password2";
         userService.createUser(username, password);

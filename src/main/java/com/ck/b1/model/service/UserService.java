@@ -18,7 +18,12 @@ public class UserService {
     PasswordEncoder passwordEncoder;
 
     public UserDetails createUser(String name, String password) {
-        // TODO ROLE is needed!
+        /*
+         * Might create an entity that maps to the USERS table and then we could use JPA to creat a new entry.
+         * UserDetailsService uses JDBC template to insert a new record.
+         */
+
+        // ROLE is mandatory!
         UserDetails user = User.withUsername(name).password(passwordEncoder.encode(password)).roles("USER").build();
         if (userDetailsService instanceof UserDetailsManager) {
             UserDetailsManager userDetailsManager = (UserDetailsManager) userDetailsService;

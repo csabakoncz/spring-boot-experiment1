@@ -4,11 +4,13 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.ck.b1.model.Customer;
 import com.ck.b1.model.CustomerRepository;
 
+@DirtiesContext
 @ActiveProfiles("test")
 @SpringBootTest()
 public class JPATests {

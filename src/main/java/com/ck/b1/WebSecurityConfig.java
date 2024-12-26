@@ -194,8 +194,10 @@ public class WebSecurityConfig {
             return http.build();
         }
 
-        http.authorizeHttpRequests(
-                (requests) -> requests.requestMatchers("/", "/home", "/h2-console/**", "/actuator/**").permitAll());
+        http.authorizeHttpRequests((requests) -> requests.requestMatchers("/", "/home", "/actuator/**").permitAll());
+
+        // workaround to have openapi.json generated:
+        http.authorizeHttpRequests((requests) -> requests.requestMatchers("/v3/api-docs").permitAll());
 
         http.authorizeHttpRequests(
                 auth -> auth.requestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**")).permitAll())

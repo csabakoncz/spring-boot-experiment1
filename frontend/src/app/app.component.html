@@ -1,0 +1,20 @@
+<h1>test</h1>
+<h2>a</h2>
+@if (loading) {
+  <h1 class="app-loading">Loading</h1>
+}
+@else {
+  @if(error){
+    <h1 class="app-error">{{error}}</h1>
+  }
+  @else {
+    <h2>Customers</h2>
+    <ol class="app-customers">
+      @for (c of customers; track $index) {
+        <li>[{{c.id}}] {{c.lastName}}, {{c.firstName}}</li>
+      }
+    </ol>
+  }
+}
+
+<router-outlet />

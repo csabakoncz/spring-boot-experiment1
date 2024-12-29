@@ -43,7 +43,7 @@ public class HelloWorldController {
     @GetMapping("/hello-world")
     @ResponseBody
     public List<Customer> sayHello(
-            @RequestParam(name = "name", required = false, defaultValue = "Stranger") String name) {
+            @RequestParam(name = "name", required = false, defaultValue = "Bauer") String name) {
         List<Customer> customers = customerRepository.findByLastName(name);
 
         SecurityContext context = SecurityContextHolder.getContext();

@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Configuration;
 
 import com.ck.b1.model.Customer;
 import com.ck.b1.model.CustomerRepository;
+import com.ck.b1.model.service.UserService;
 
 @Configuration
 public class DemoConfiguration {
@@ -17,7 +18,7 @@ public class DemoConfiguration {
     private Logger log = LoggerFactory.getLogger(getClass());
 
     @Bean
-    public CommandLineRunner demo(CustomerRepository repository) {
+    public CommandLineRunner demo(CustomerRepository repository, UserService userService) {
         return (args) -> {
             if (!Arrays.asList(args).contains("jpademo")) {
                 log.info("jpademo not requested. To have it run, add \"jpademo\" to the command line arguments");
@@ -53,6 +54,15 @@ public class DemoConfiguration {
                 log.info(bauer.toString());
             });
             log.info("");
+
+            var demouser = userService.findUser("demouser");
+            if (demouser == null) {
+                log.info("creating demouser (password: demouser)");
+                userService.createUser("demouser", "demouser");
+            } else {
+                log.info("demouser found");
+            }
+
         };
     }
 }

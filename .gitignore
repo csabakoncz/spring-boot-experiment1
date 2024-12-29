@@ -33,3 +33,5 @@ build/
 .vscode/
 
 run.out
+node
+node_modules

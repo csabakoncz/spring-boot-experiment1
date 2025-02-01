@@ -2,6 +2,7 @@ package com.ck.b1;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
 
 import javax.sql.DataSource;
@@ -33,6 +34,9 @@ import org.springframework.security.web.authentication.ui.DefaultLoginPageGenera
 import org.springframework.security.web.savedrequest.RequestCache;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -43,6 +47,19 @@ import jakarta.servlet.http.HttpServletResponse;
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig {
+
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        // ng serve
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
+        configuration.setAllowedMethods(Arrays.asList("*"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
 
     static class AuthenticationSuccessHandler200 extends SavedRequestAwareAuthenticationSuccessHandler {
         @Override
@@ -193,6 +210,8 @@ public class WebSecurityConfig {
             http.authorizeHttpRequests(reqs -> reqs.anyRequest().permitAll());
             return http.build();
         }
+
+        http.cors(Customizer.withDefaults());
 
         http.authorizeHttpRequests((requests) -> requests.requestMatchers("/", "/home", "/actuator/**").permitAll());
 

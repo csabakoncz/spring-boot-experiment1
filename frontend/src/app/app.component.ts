@@ -16,7 +16,7 @@ export class AppComponent {
   customers?: Customer[];
 
   constructor(private helloService: HelloWorldControllerService) {
-    lastValueFrom(helloService.sayHello())
+    lastValueFrom(this.helloService.sayHello())
       .then((customers) => {
         this.customers = customers;
       })

@@ -40,6 +40,7 @@ jobs:
   deploy:
 
     runs-on: my-pi4
+    needs: build
 
     steps:
     - name: Download artifacts and deploy them

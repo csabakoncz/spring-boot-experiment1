@@ -6,7 +6,7 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Build only
+name: Build and deploy
 
 on:
   # Allows you to run this workflow manually from the Actions tab
@@ -35,6 +35,20 @@ jobs:
     - name: Archive build
       uses: actions/upload-artifact@v4
       with:
-        name: build
+        name: build-artifacts
         path: target/*.jar
+  deploy:
+
+    runs-on: my-pi4
+
+    steps:
+    - name: Download artifacts and deploy them
+      uses: actions/download-artifact@v4
+      with
+        name: build-artifacts
+    - shell: bash
+      run: |
+        cp -a *.jar /deploy-target
+        chmod a+r /deploy-target/*.jar
+        docker restart eowa-eowa-1
 
